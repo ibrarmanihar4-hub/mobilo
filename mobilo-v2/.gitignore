@@ -1,0 +1,19 @@
+node_modules/
+.expo/
+dist/
+web-build/
+npm-debug.*
+*.jks
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+.DS_Store
+.env*.local
+android/
+ios/
+.gradle/
+build/
+
+# Local Supabase CLI binary (downloaded into tools/ for this workspace)
+tools/

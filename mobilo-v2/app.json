@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "Mobilo",
+    "slug": "mobilo-v2",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "mobilo",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "sdkVersion": "54.0.0",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F5F7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mobilov2.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Mobilo uses your location to find the nearest shuttle junction.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Mobilo uses your location to provide real-time shuttle tracking."
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyBNzfuzjIGEx2KbR91LDrAs6JnofVPhl10"
+      }
+    },
+    "android": {
+      "package": "com.mobilov2.app",
+      "versionCode": 5,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F5F7"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBNzfuzjIGEx2KbR91LDrAs6JnofVPhl10"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Mobilo uses your location to find the nearest shuttle junction."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
+          }
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8ecb43a5-5130-4cc3-ad1d-953d171bcf2b"
+      }
+    },
+    "owner": "ibrar32"
+  }
+}

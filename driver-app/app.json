@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "Mobilo Driver",
+    "slug": "mobilo-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "mobilodriver",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "sdkVersion": "54.0.0",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F5F7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mobilo.driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Mobilo Driver uses your location to share live position with riders while you are online.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Mobilo Driver shares your live location with riders during active trips.",
+        "UIBackgroundModes": ["location"]
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyBNzfuzjIGEx2KbR91LDrAs6JnofVPhl10"
+      }
+    },
+    "android": {
+      "package": "com.mobilo.driver",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F5F7"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBNzfuzjIGEx2KbR91LDrAs6JnofVPhl10"
+        }
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Mobilo Driver shares your live location with riders during active trips."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "enableProguardInReleaseBuilds": false,
+            "enableShrinkResourcesInReleaseBuilds": false
+          }
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b0730671-041f-464c-bfa6-e99a42b08957"
+      }
+    },
+    "owner": "ibrar32"
+  }
+}
