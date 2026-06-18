@@ -16,12 +16,6 @@ build/
 .expo/
 **/.expo/
 
-# Native builds
-android/
-ios/
-**/android/
-**/ios/
-
 # IDE
 .vscode/
 .idea/
