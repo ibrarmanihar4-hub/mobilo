@@ -144,10 +144,18 @@ export default function DirectRideStatusScreen() {
   // Searching timer + keep dispatch rolling while unmatched.
   useEffect(() => {
     if (status !== "requested") return;
+    
     const tick = setInterval(() => setSearchSeconds((s) => s + 1), 1000);
+    
+    // Initial dispatch happens immediately on mount
+    void requestDispatch(tripId);
+    
+    // Re-dispatch every 5s (reduced from 18s for faster driver matching)
+    // This covers cases where offers expire (15s TTL) or are rejected
     const dispatch = setInterval(() => {
       void requestDispatch(tripId);
-    }, 18000);
+    }, 5000);
+    
     return () => {
       clearInterval(tick);
       clearInterval(dispatch);

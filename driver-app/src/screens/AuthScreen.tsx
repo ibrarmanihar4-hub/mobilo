@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,9 +11,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { useAuth } from "../context/AuthContext";
 import { colors, radii } from "../theme";
+
+const AUTH_STATE_KEY = "@mobilo_driver:auth_state";
+
+type AuthState = {
+  step: "phone" | "otp";
+  phone: string;
+  timestamp: number;
+};
 
 export default function AuthScreen() {
   const { sendOtp, verifyOtp } = useAuth();
@@ -22,6 +31,48 @@ export default function AuthScreen() {
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Restore auth state on mount
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(AUTH_STATE_KEY);
+        if (saved) {
+          const state: AuthState = JSON.parse(saved);
+          // Only restore if less than 10 minutes old
+          const age = Date.now() - state.timestamp;
+          if (age < 10 * 60 * 1000) {
+            setStep(state.step);
+            setPhone(state.phone);
+          } else {
+            // Clear expired state
+            await AsyncStorage.removeItem(AUTH_STATE_KEY);
+          }
+        }
+      } catch (e) {
+        console.warn("Could not restore auth state:", e);
+      }
+    };
+    restoreState();
+  }, []);
+
+  // Persist auth state when step or phone changes
+  useEffect(() => {
+    const saveState = async () => {
+      if (step === "otp" && phone) {
+        const state: AuthState = {
+          step,
+          phone,
+          timestamp: Date.now(),
+        };
+        await AsyncStorage.setItem(AUTH_STATE_KEY, JSON.stringify(state));
+      } else if (step === "phone") {
+        // Clear state when back to phone entry
+        await AsyncStorage.removeItem(AUTH_STATE_KEY);
+      }
+    };
+    saveState();
+  }, [step, phone]);
 
   const handleSend = async () => {
     setError(null);
@@ -41,6 +92,8 @@ export default function AuthScreen() {
     setBusy(true);
     try {
       await verifyOtp(phone, otp);
+      // Clear persisted state on successful verification
+      await AsyncStorage.removeItem(AUTH_STATE_KEY);
       // Auth state change navigates away automatically.
     } catch (e) {
       setError(e instanceof Error ? e.message : "Incorrect OTP.");
