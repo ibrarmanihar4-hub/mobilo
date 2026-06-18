@@ -12,11 +12,12 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F5F7"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mobilov2.app",
+      "icon": "./assets/icon.png",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Mobilo uses your location to find the nearest shuttle junction.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Mobilo uses your location to provide real-time shuttle tracking."
@@ -34,12 +35,8 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F5F5F7"
-      },
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyBNzfuzjIGEx2KbR91LDrAs6JnofVPhl10"
-        }
+        "monochromeImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       }
     },
     "web": {
