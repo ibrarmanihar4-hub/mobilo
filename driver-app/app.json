@@ -12,11 +12,12 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F5F7"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mobilo.driver",
+      "icon": "./assets/icon.png",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Mobilo Driver uses your location to share live position with riders while you are online.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Mobilo Driver shares your live location with riders during active trips.",
@@ -36,7 +37,8 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F5F5F7"
+        "monochromeImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       },
       "config": {
         "googleMaps": {
