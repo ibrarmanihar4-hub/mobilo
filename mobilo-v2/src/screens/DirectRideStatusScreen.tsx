@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  AppState,
   Linking,
   ScrollView,
   StyleSheet,
@@ -118,6 +119,10 @@ export default function DirectRideStatusScreen() {
   const [driver, setDriver] = useState<DriverRow | null>(null);
   const [liveLoc, setLiveLoc] = useState<LiveLocation | null>(null);
   const [searchSeconds, setSearchSeconds] = useState(0);
+  // Who cancelled the trip, if cancelled (rider / driver / system).
+  const [cancelledBy, setCancelledBy] = useState<string | null>(null);
+  // Track real wall-clock start time so backgrounding doesn't freeze the counter
+  const searchStartRef = useRef<number>(Date.now());
 
   const mapHeight = layout.isTablet
     ? Math.min(Math.max(height * 0.3, 260), 340)
@@ -133,6 +138,7 @@ export default function DirectRideStatusScreen() {
   useEffect(() => {
     const unsubscribe = subscribeToTrip(tripId, (trip) => {
       setStatus(trip.status);
+      setCancelledBy(trip.cancelled_by ?? null);
       if (trip.driver_id && (!driver || driver.id !== trip.driver_id)) {
         void fetchDriver(trip.driver_id).then((d) => d && setDriver(d));
       }
@@ -144,21 +150,36 @@ export default function DirectRideStatusScreen() {
   // Searching timer + keep dispatch rolling while unmatched.
   useEffect(() => {
     if (status !== "requested") return;
-    
-    const tick = setInterval(() => setSearchSeconds((s) => s + 1), 1000);
-    
+
+    // Reset start time when we enter "requested" state
+    searchStartRef.current = Date.now();
+
+    // Tick using real wall-clock difference so backgrounding doesn't freeze it
+    const tick = setInterval(() => {
+      setSearchSeconds(Math.floor((Date.now() - searchStartRef.current) / 1000));
+    }, 1000);
+
     // Initial dispatch happens immediately on mount
     void requestDispatch(tripId);
-    
-    // Re-dispatch every 5s (reduced from 18s for faster driver matching)
-    // This covers cases where offers expire (15s TTL) or are rejected
+
+    // Re-dispatch every 5s for faster driver matching
     const dispatch = setInterval(() => {
       void requestDispatch(tripId);
     }, 5000);
-    
+
+    // When app comes back to foreground, update elapsed time immediately
+    const appStateSub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        setSearchSeconds(Math.floor((Date.now() - searchStartRef.current) / 1000));
+        // Also re-dispatch in case we missed events while backgrounded
+        void requestDispatch(tripId);
+      }
+    });
+
     return () => {
       clearInterval(tick);
       clearInterval(dispatch);
+      appStateSub.remove();
     };
   }, [status, tripId]);
 
@@ -309,8 +330,16 @@ export default function DirectRideStatusScreen() {
                 >
                   <Ionicons name={theme!.icon} size={34} color="#FFFFFF" />
                 </View>
-                <Text style={styles.resultTitle}>{theme!.title}</Text>
-                <Text style={styles.resultSub}>{theme!.sub}</Text>
+                <Text style={styles.resultTitle}>
+                  {isCancelled && cancelledBy === "system"
+                    ? "No drivers available"
+                    : theme!.title}
+                </Text>
+                <Text style={styles.resultSub}>
+                  {isCancelled && cancelledBy === "system"
+                    ? "No drivers accepted the ride right now. Please try booking again in a little while."
+                    : theme!.sub}
+                </Text>
                 {isCompleted ? (
                   <View style={styles.fareSummary}>
                     <Text style={styles.fareSummaryLabel}>Total paid</Text>

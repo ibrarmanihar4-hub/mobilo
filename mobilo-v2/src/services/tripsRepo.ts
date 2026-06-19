@@ -167,6 +167,7 @@ export type TripOfferRow = Database["public"]["Tables"]["trip_offers"]["Row"];
 export type DispatchResult =
   | { status: "offered"; offerId: string; driverId: string; distanceM: number; expiresAt: string }
   | { status: "no_drivers" }
+  | { status: "cancelled" }
   | { status: "noop"; tripStatus: string };
 
 /**
@@ -209,6 +210,8 @@ export async function requestDispatch(
       };
     case "no_drivers":
       return { status: "no_drivers" };
+    case "cancelled":
+      return { status: "cancelled" };
     default:
       return { status: "noop", tripStatus: result.trip_status ?? "unknown" };
   }
