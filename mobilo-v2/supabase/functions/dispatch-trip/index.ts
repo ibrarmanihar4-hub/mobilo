@@ -32,8 +32,7 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // TEST CONVENIENCE: radius effectively unlimited (20,000 km) so distance
 // never blocks testing. PRODUCTION TODO: restore city-scale radii (~4-8 km).
 const INITIAL_RADIUS_M = 20000000;
-const EXPANDED_RADIUS_M = 20000000;
-const OFFER_TTL_SECONDS = 15;
+const OFFER_TTL_SECONDS = 30;
 
 interface DispatchRequest {
   trip_id: string;
@@ -106,67 +105,52 @@ Deno.serve(async (req) => {
     return json({ status: "noop", trip_status: trip.status });
   }
 
-  // Find nearest drivers, expanding the radius once if the first pass is empty.
-  async function findDrivers(radius: number) {
-    const { data, error } = await admin.rpc("dispatch_find_drivers", {
+  // Offer the trip to the next eligible driver (or cancel it if everyone has
+  // declined their allowed attempts). All of the find-driver + offer + cancel
+  // logic lives in the dispatch_offer_next SQL function so the foreground
+  // Edge Function and the background cron sweeper behave identically and the
+  // decline limit is enforced in one place.
+  const { data: result, error: rpcErr } = await admin.rpc(
+    "dispatch_offer_next",
+    {
       p_trip_id: payload.trip_id,
-      p_radius_m: radius,
-      p_limit: 1,
-    });
-    if (error) throw new Error(error.message);
-    return data ?? [];
+      p_radius_m: INITIAL_RADIUS_M,
+      p_offer_ttl_seconds: OFFER_TTL_SECONDS,
+    },
+  );
+
+  if (rpcErr) {
+    return json({ error: rpcErr.message }, 500);
   }
 
-  let candidates: { driver_id: string; distance_m: number }[];
-  try {
-    candidates = await findDrivers(INITIAL_RADIUS_M);
-    if (candidates.length === 0) {
-      candidates = await findDrivers(EXPANDED_RADIUS_M);
-    }
-  } catch (error) {
-    return json(
-      { error: error instanceof Error ? error.message : "dispatch failed" },
-      500,
-    );
-  }
+  const r = (result ?? {}) as {
+    status?: string;
+    offer_id?: string;
+    driver_id?: string;
+    distance_m?: number;
+    expires_at?: string;
+    trip_status?: string;
+  };
 
-  if (candidates.length === 0) {
-    return json({ status: "no_drivers" });
-  }
-
-  const nearest = candidates[0];
-  const expiresAt = new Date(Date.now() + OFFER_TTL_SECONDS * 1000).toISOString();
-
-  // Upsert the offer. A prior offer to this driver for this trip may exist in
-  // a terminal state (expired/rejected/cancelled) - revive it rather than
-  // erroring on the unique (trip_id, driver_id) constraint. onConflict +
-  // ignoreDuplicates:false performs an update.
-  const { data: offer, error: offerErr } = await admin
-    .from("trip_offers")
-    .upsert(
-      {
-        trip_id: payload.trip_id,
-        driver_id: nearest.driver_id,
-        distance_m: nearest.distance_m,
+  switch (r.status) {
+    case "offered":
+      return json({
         status: "offered",
-        offered_at: new Date().toISOString(),
-        expires_at: expiresAt,
-        responded_at: null,
-      },
-      { onConflict: "trip_id,driver_id" },
-    )
-    .select("id, driver_id, expires_at")
-    .single();
-
-  if (offerErr) {
-    return json({ error: offerErr.message }, 500);
+        offer_id: r.offer_id,
+        driver_id: r.driver_id,
+        distance_m: r.distance_m,
+        expires_at: r.expires_at,
+      });
+    case "cancelled":
+      // Every eligible driver declined their attempts; the trip was cancelled.
+      return json({ status: "cancelled" });
+    case "pending":
+      // A driver is currently deciding on a live offer; keep waiting.
+      return json({ status: "pending" });
+    case "noop":
+      return json({ status: "noop", trip_status: r.trip_status });
+    case "no_drivers":
+    default:
+      return json({ status: "no_drivers" });
   }
-
-  return json({
-    status: "offered",
-    offer_id: offer.id,
-    driver_id: offer.driver_id,
-    distance_m: nearest.distance_m,
-    expires_at: offer.expires_at,
-  });
 });

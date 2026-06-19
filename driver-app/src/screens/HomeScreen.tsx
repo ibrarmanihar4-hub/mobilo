@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -49,14 +50,42 @@ export default function HomeScreen({
   // Drives a 1s re-render so the countdown labels tick down.
   const [, setTick] = useState(0);
 
+  // Local arrival time per offer, keyed by offer id + offered_at so a
+  // re-offer (same row, new offered_at) gets a fresh countdown. This makes the
+  // countdown immune to clock skew between the phone and the server: we only
+  // use server timestamps for the TTL *duration*, and the device clock for
+  // elapsed time since the offer arrived.
+  const seenAtRef = useRef<Record<string, number>>({});
+
+  const remainingSeconds = useCallback(
+    (offer: OfferWithTrip["offer"]): number => {
+      const ttlMs =
+        new Date(offer.expires_at).getTime() -
+        new Date(offer.offered_at).getTime();
+      // Fallback to server-clock math if timestamps look wrong.
+      if (!Number.isFinite(ttlMs) || ttlMs <= 0) {
+        return secondsLeft(offer.expires_at);
+      }
+      const key = `${offer.id}:${offer.offered_at}`;
+      const now = Date.now();
+      if (!seenAtRef.current[key]) seenAtRef.current[key] = now;
+      const elapsed = now - seenAtRef.current[key];
+      return Math.max(0, Math.round((ttlMs - elapsed) / 1000));
+    },
+    []
+  );
+
   // Broadcast live location while online.
   useLocationBroadcast(online);
 
-  const loadOffers = useCallback(async () => {
-    setLoading(true);
-    const mine = await fetchMyOffers();
-    setOffers(mine);
-    setLoading(false);
+  const loadOffers = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
+    try {
+      const mine = await fetchMyOffers();
+      setOffers(mine);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
   }, []);
 
   // Resume an in-progress trip if the app restarted mid-ride.
@@ -71,27 +100,46 @@ export default function HomeScreen({
   useEffect(() => {
     if (!online) {
       setOffers([]);
+      setLoading(false);
       return;
     }
-    void loadOffers();
+
+    // Initial load with loading indicator
+    void loadOffers(true);
+
+    // Subscribe to real-time changes - refetch silently on any offer change
     const unsub = subscribeToMyOffers(driver.id, () => {
-      void loadOffers();
+      void loadOffers(false);
     });
-    return unsub;
+
+    // When app comes back to foreground, re-fetch offers immediately
+    // because the Realtime subscription may have missed events while backgrounded
+    const appStateSub = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        void loadOffers(false);
+      }
+    });
+
+    return () => {
+      unsub();
+      appStateSub.remove();
+    };
   }, [online, driver.id, loadOffers]);
 
-  // Tick every second to update countdowns; prune offers that hit 0.
+  // Tick every second to update countdowns; prune expired offers immediately.
   useEffect(() => {
     if (!online) return;
     const id = setInterval(() => {
-      setTick((t) => t + 1);
       setOffers((prev) => {
-        const live = prev.filter((o) => secondsLeft(o.offer.expires_at) > 0);
-        return live.length === prev.length ? prev : live;
+        // Remove offers whose local countdown has hit zero.
+        const live = prev.filter((o) => remainingSeconds(o.offer) > 0);
+        // Always update tick to re-render countdowns.
+        setTick((t) => t + 1);
+        return live;
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [online]);
+  }, [online, remainingSeconds]);
 
   const toggleOnline = async (next: boolean) => {
     setOnline(next);
@@ -119,6 +167,11 @@ export default function HomeScreen({
     setResponding(null);
     setOffers((prev) => prev.filter((o) => o.offer.id !== item.offer.id));
   };
+
+  // Render-time guard: never show offers that are already expired, even if the
+  // 1s prune interval hasn't fired yet or a fetch returned a near-expiry offer.
+  // `setTick` (driven by the interval above) re-renders this each second.
+  const visibleOffers = offers.filter((o) => remainingSeconds(o.offer) > 0);
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -178,16 +231,19 @@ export default function HomeScreen({
       >
         {!online ? (
           <Empty icon="power" text="Go online to receive ride offers." />
-        ) : offers.length === 0 ? (
+        ) : visibleOffers.length === 0 ? (
           <Empty icon="time-outline" text="No offers yet. Hang tight." />
         ) : (
-          offers.map((item) => {
-            const left = secondsLeft(item.offer.expires_at);
+          visibleOffers.map((item) => {
+            const left = remainingSeconds(item.offer);
             const distanceKm =
               item.offer.distance_m != null
                 ? (item.offer.distance_m / 1000).toFixed(1)
                 : null;
             const isResponding = responding === item.offer.id;
+            // Lock out accept in the final second to avoid accepting an offer
+            // the server has already expired (also covers minor clock skew).
+            const isExpiring = left <= 1;
             return (
               <View key={item.offer.id} style={styles.tripCard}>
                 <View style={styles.tripTop}>
@@ -222,15 +278,17 @@ export default function HomeScreen({
                     <Text style={styles.rejectText}>Decline</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.accept}
+                    style={[styles.accept, isExpiring && styles.acceptDisabled]}
                     onPress={() => handleAccept(item)}
-                    disabled={isResponding}
+                    disabled={isResponding || isExpiring}
                     activeOpacity={0.85}
                   >
                     {isResponding ? (
                       <ActivityIndicator color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.acceptText}>Accept</Text>
+                      <Text style={styles.acceptText}>
+                        {isExpiring ? "Expiring…" : "Accept"}
+                      </Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -393,6 +451,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   acceptText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
+  acceptDisabled: { backgroundColor: colors.inkFaint, opacity: 0.6 },
   empty: { alignItems: "center", paddingVertical: 60 },
   emptyText: {
     color: colors.inkMuted,
