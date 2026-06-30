@@ -10,10 +10,11 @@ import AuthScreen from "./src/screens/AuthScreen";
 import DriverSetupScreen from "./src/screens/DriverSetupScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import ActiveTripScreen from "./src/screens/ActiveTripScreen";
+import KycFlow from "./src/kyc/KycFlow";
 import type { DriverRow, TripRow } from "./src/types";
 import { colors } from "./src/theme";
 
-type Screen = "loading" | "setup" | "home" | "trip";
+type Screen = "loading" | "setup" | "kyc" | "home" | "trip";
 
 function Root() {
   const { user, loading } = useAuth();
@@ -26,7 +27,16 @@ function Root() {
     const d = await fetchMyDriver();
     if (d) {
       setDriver(d);
-      setScreen("home");
+      // If the driver profile exists but KYC hasn't been submitted yet,
+      // send them through KYC. We track this with AsyncStorage locally
+      // until Supabase KYC tables are wired up.
+      const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+      const kycDone = await AsyncStorage.getItem(`@mobilo_kyc_done:${d.id}`).catch(() => null);
+      if (kycDone === "true") {
+        setScreen("home");
+      } else {
+        setScreen("kyc");
+      }
     } else {
       setScreen("setup");
     }
@@ -73,6 +83,23 @@ function Root() {
 
   if (screen === "setup") {
     return <DriverSetupScreen onDone={loadDriver} />;
+  }
+
+  if (screen === "kyc" && driver) {
+    return (
+      <KycFlow
+        onComplete={async () => {
+          // Mark KYC as submitted locally until Supabase tables are wired.
+          try {
+            const AsyncStorage = require("@react-native-async-storage/async-storage").default;
+            await AsyncStorage.setItem(`@mobilo_kyc_done:${driver.id}`, "true");
+          } catch {
+            // ignore
+          }
+          setScreen("home");
+        }}
+      />
+    );
   }
 
   if (screen === "trip" && activeTrip) {
