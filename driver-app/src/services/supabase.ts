@@ -5,8 +5,12 @@ import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const SUPABASE_URL =
+  process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() ||
+  "https://pjmloilxdeceyurqgvlu.supabase.co";
+const SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqbWxvaWx4ZGVjZXl1cnFndmx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTgzNDYsImV4cCI6MjA5NTczNDM0Nn0.TqVjg5T0zgTpao2Clf4aJ21Oz4teK1hbWmJzGRQfYz8";
 
 export const isSupabaseConfigured =
   SUPABASE_URL.trim().length > 0 && SUPABASE_ANON_KEY.trim().length > 0;
