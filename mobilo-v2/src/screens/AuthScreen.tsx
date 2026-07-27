@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -27,6 +28,16 @@ import { colors, radii } from "../theme/theme";
 import { getLayoutMetrics } from "../utils/responsive";
 
 const RESEND_COOLDOWN_SECONDS = 30;
+const OTP_PERSIST_KEY = "@mobilo:pendingOtp";
+const OTP_TTL_MS = 10 * 60 * 1000; // 10 min — matches Supabase OTP expiry
+
+type PersistedOtp = {
+  phoneNumber: string;
+  mode: string;
+  fullName: string;
+  sessionId: string;
+  sentAt: number;
+};
 
 export default function AuthScreen() {
   const { sendOtp, verifyOtp } = useAuth();
@@ -55,6 +66,35 @@ export default function AuthScreen() {
 
   const canVerify = canSendOtp && otp.replace(/\D/g, "").length >= 4;
 
+  // Restore persisted OTP step on mount (survives OS-kill + relaunch).
+  useEffect(() => {
+    AsyncStorage.getItem(OTP_PERSIST_KEY)
+      .then((raw) => {
+        if (!raw) return;
+        try {
+          const saved: PersistedOtp = JSON.parse(raw);
+          const age = Date.now() - saved.sentAt;
+          if (age > OTP_TTL_MS) {
+            // OTP has expired — discard
+            void AsyncStorage.removeItem(OTP_PERSIST_KEY);
+            return;
+          }
+          setMode(saved.mode as any);
+          setPhoneNumber(saved.phoneNumber);
+          setFullName(saved.fullName ?? "");
+          setSessionId(saved.sessionId);
+          setOtpSent(true);
+          // Resend cooldown: subtract how much time has already elapsed
+          const elapsedSec = Math.floor(age / 1000);
+          setResendIn(Math.max(0, RESEND_COOLDOWN_SECONDS - elapsedSec));
+        } catch {
+          void AsyncStorage.removeItem(OTP_PERSIST_KEY);
+        }
+      })
+      .catch(() => {/* ignore */});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (resendIn <= 0) return;
     const id = setInterval(
@@ -77,6 +117,7 @@ export default function AuthScreen() {
     setInfo(null);
     setErrorMessage(null);
     setResendIn(0);
+    void AsyncStorage.removeItem(OTP_PERSIST_KEY);
   };
 
   const handleModeChange = (next: AuthMode) => {
@@ -100,6 +141,17 @@ export default function AuthScreen() {
       setOtpSent(true);
       setInfo(result.message);
       setResendIn(RESEND_COOLDOWN_SECONDS);
+      // Persist so the OTP step survives app relaunch
+      void AsyncStorage.setItem(
+        OTP_PERSIST_KEY,
+        JSON.stringify({
+          phoneNumber: phoneNumber.trim(),
+          mode,
+          fullName: fullName.trim(),
+          sessionId: result.sessionId,
+          sentAt: Date.now(),
+        } satisfies PersistedOtp)
+      );
     } catch (e) {
       setErrorMessage(
         e instanceof Error ? e.message : "Could not send OTP."
@@ -122,6 +174,8 @@ export default function AuthScreen() {
         otp: otp.trim(),
         sessionId,
       });
+      // OTP verified — clear persisted state
+      void AsyncStorage.removeItem(OTP_PERSIST_KEY);
     } catch (e) {
       setErrorMessage(
         e instanceof Error ? e.message : "Could not verify OTP."

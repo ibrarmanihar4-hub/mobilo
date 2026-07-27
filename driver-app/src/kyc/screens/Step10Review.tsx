@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -18,9 +19,10 @@ interface Props {
   data: KycData;
   onPrev: () => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
-export default function Step10Review({ data, onPrev, onSubmit }: Props) {
+export default function Step10Review({ data, onPrev, onSubmit, isSubmitting = false }: Props) {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <KycProgressBar
@@ -104,13 +106,29 @@ export default function Step10Review({ data, onPrev, onSubmit }: Props) {
 
       {/* Nav */}
       <View style={styles.navRow}>
-        <TouchableOpacity style={styles.prevBtn} onPress={onPrev} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={[styles.prevBtn, isSubmitting && styles.btnDisabled]}
+          onPress={onPrev}
+          activeOpacity={0.8}
+          disabled={isSubmitting}
+        >
           <Ionicons name="arrow-back" size={18} color={colors.ink} />
           <Text style={styles.prevText}>Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.submitBtn} onPress={onSubmit} activeOpacity={0.85}>
-          <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
-          <Text style={styles.submitText}>Submit KYC</Text>
+        <TouchableOpacity
+          style={[styles.submitBtn, isSubmitting && styles.btnDisabled]}
+          onPress={onSubmit}
+          activeOpacity={0.85}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+          )}
+          <Text style={styles.submitText}>
+            {isSubmitting ? 'Uploading…' : 'Submit KYC'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -266,4 +284,5 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   submitText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  btnDisabled: { opacity: 0.55 },
 });

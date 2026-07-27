@@ -17,6 +17,10 @@
       "environment": "preview",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://pjmloilxdeceyurqgvlu.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqbWxvaWx4ZGVjZXl1cnFndmx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTgzNDYsImV4cCI6MjA5NTczNDM0Nn0.TqVjg5T0zgTpao2Clf4aJ21Oz4teK1hbWmJzGRQfYz8"
       }
     },
     "production": {

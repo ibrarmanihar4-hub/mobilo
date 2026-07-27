@@ -1,9 +1,11 @@
 // KYC onboarding flow orchestrator.
 // Holds all KYC state and renders the active step screen.
-// No Supabase integration yet — data lives in local state only.
+// On Step 10 submit: uploads images to Storage + upserts data to driver_kyc.
 
 import React, { useState } from 'react';
+import { Alert } from 'react-native';
 import { EMPTY_KYC, type KycData } from './types';
+import { submitKyc } from '../services/kycRepo';
 import PersonalInfoScreen from './screens/PersonalInfoScreen';
 import AadhaarScreen from './screens/AadhaarScreen';
 import PanScreen from './screens/PanScreen';
@@ -17,19 +19,45 @@ import Step10Review from './screens/Step10Review';
 import Step11Submitted from './screens/Step11Submitted';
 
 interface Props {
-  /** Called after KYC is "submitted" so the parent can continue to main app flow. */
+  /** Called after KYC is successfully submitted so the parent can continue to main app flow. */
   onComplete: () => void;
 }
 
 export default function KycFlow({ onComplete }: Props) {
   const [step, setStep] = useState(1);
   const [data, setData] = useState<KycData>(EMPTY_KYC);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const next = () => setStep((s) => s + 1);
   const prev = () => setStep((s) => Math.max(1, s - 1));
 
   const patch = <K extends keyof KycData>(key: K, value: KycData[K]) => {
     setData((d) => ({ ...d, [key]: value }));
+  };
+
+  /** Upload images + persist all fields; advance only on success. */
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const result = await submitKyc(data);
+      if (result.success) {
+        next(); // → Step 11 (Submitted)
+      } else {
+        Alert.alert(
+          'Submission Failed',
+          result.error ?? 'Something went wrong. Please try again.',
+          [{ text: 'OK' }],
+        );
+      }
+    } catch (err: any) {
+      Alert.alert(
+        'Submission Failed',
+        err?.message ?? 'An unexpected error occurred. Please try again.',
+        [{ text: 'OK' }],
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   switch (step) {
@@ -114,7 +142,8 @@ export default function KycFlow({ onComplete }: Props) {
         <Step10Review
           data={data}
           onPrev={prev}
-          onSubmit={next}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
         />
       );
     case 11:
