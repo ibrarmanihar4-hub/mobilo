@@ -1,6 +1,6 @@
 // Shared row shapes for the driver app. These mirror the Supabase tables
-// created by the rider app's migration (drivers, trips). Kept minimal -
-// only what the driver app reads/writes.
+// created by the rider app's migration (drivers, trips, driver_kyc). Kept
+// minimal - only what the driver app reads/writes.
 
 export type RideType = "cab" | "auto" | "moto" | "shuttle";
 export type DirectRideType = "cab" | "auto" | "moto";
@@ -71,3 +71,70 @@ export interface TripOfferRow {
   responded_at: string | null;
 }
 
+
+// ---------------------------------------------------------------------------
+// KYC
+// ---------------------------------------------------------------------------
+
+export type KycStatus = 'pending' | 'approved' | 'rejected';
+
+export interface DriverKycRow {
+  driver_id: string;
+  status: KycStatus;
+  rejection_reason: string | null;
+
+  // personal
+  full_name: string | null;
+  dob: string | null;
+  gender: string | null;
+  address: string | null;
+  emergency_contact: string | null;
+
+  // aadhaar
+  aadhaar_number: string | null;
+  aadhaar_front_url: string | null;
+  aadhaar_back_url: string | null;
+
+  // pan
+  pan_number: string | null;
+  pan_url: string | null;
+
+  // license
+  license_number: string | null;
+  license_expiry: string | null;
+  license_front_url: string | null;
+  license_back_url: string | null;
+
+  // profile photo
+  selfie_url: string | null;
+
+  // vehicle
+  vehicle_type: string | null;
+  vehicle_number: string | null;
+  vehicle_model: string | null;
+  vehicle_color: string | null;
+  rc_number: string | null;
+  rc_front_url: string | null;
+  rc_back_url: string | null;
+
+  // insurance
+  insurance_number: string | null;
+  insurance_expiry: string | null;
+  insurance_url: string | null;
+
+  // puc
+  puc_number: string | null;
+  puc_expiry: string | null;
+  puc_url: string | null;
+
+  // bank
+  account_holder_name: string | null;
+  bank_name: string | null;
+  account_number: string | null;
+  ifsc_code: string | null;
+  passbook_url: string | null;
+
+  submitted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}

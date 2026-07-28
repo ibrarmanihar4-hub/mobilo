@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { fetchMyDriver } from "./src/services/driverRepo";
+import { fetchKycRecord } from "./src/services/kycRepo";
 import { isSupabaseConfigured } from "./src/services/supabase";
 import AuthScreen from "./src/screens/AuthScreen";
 import DriverSetupScreen from "./src/screens/DriverSetupScreen";
@@ -27,12 +28,10 @@ function Root() {
     const d = await fetchMyDriver();
     if (d) {
       setDriver(d);
-      // If the driver profile exists but KYC hasn't been submitted yet,
-      // send them through KYC. We track this with AsyncStorage locally
-      // until Supabase KYC tables are wired up.
-      const AsyncStorage = require("@react-native-async-storage/async-storage").default;
-      const kycDone = await AsyncStorage.getItem(`@mobilo_kyc_done:${d.id}`).catch(() => null);
-      if (kycDone === "true") {
+      // Check Supabase for an existing KYC submission.
+      // If a driver_kyc row already exists (any status), skip the KYC flow.
+      const kyc = await fetchKycRecord();
+      if (kyc) {
         setScreen("home");
       } else {
         setScreen("kyc");
@@ -88,14 +87,9 @@ function Root() {
   if (screen === "kyc" && driver) {
     return (
       <KycFlow
-        onComplete={async () => {
-          // Mark KYC as submitted locally until Supabase tables are wired.
-          try {
-            const AsyncStorage = require("@react-native-async-storage/async-storage").default;
-            await AsyncStorage.setItem(`@mobilo_kyc_done:${driver.id}`, "true");
-          } catch {
-            // ignore
-          }
+        onComplete={() => {
+          // KYC data is now persisted in Supabase (driver_kyc table).
+          // Simply move to the home screen.
           setScreen("home");
         }}
       />

@@ -11,7 +11,7 @@ import { AppState } from "react-native";
 
 import { DEFAULT_SHUTTLE_ROUTES } from "../data/defaultRoutes";
 import { fetchRoutesFromApi } from "../services/routeApi";
-import { API_BASE_URL } from "../services/api";
+import { isSupabaseConfigured } from "../services/supabase";
 import {
   buildAllRouteStops,
   SearchableStop,
@@ -31,13 +31,10 @@ const RouteDataContext = createContext<RouteDataContextValue | undefined>(
   undefined
 );
 
-// Only attempt the live route sync when the user has explicitly configured
-// a backend URL. Without one, the bundled routes are the source of truth
-// and the "Live route sync unavailable" banner is just noise.
-const HAS_BACKEND = Boolean(
-  process.env.EXPO_PUBLIC_API_BASE_URL &&
-    process.env.EXPO_PUBLIC_API_BASE_URL.trim().length > 0
-);
+// Only attempt the live route sync when Supabase is configured. Without
+// it, the bundled routes are the source of truth and the "Live route sync
+// unavailable" banner is just noise.
+const HAS_BACKEND = isSupabaseConfigured;
 
 export function RouteDataProvider({ children }: { children: ReactNode }) {
   const [routes, setRoutes] = useState<ShuttleRoute[]>(DEFAULT_SHUTTLE_ROUTES);
@@ -86,7 +83,7 @@ export function RouteDataProvider({ children }: { children: ReactNode }) {
         setRoutes(DEFAULT_SHUTTLE_ROUTES);
         setUsingFallback(true);
         setError(
-          `Live route sync is unavailable from ${API_BASE_URL}. Built-in routes are being shown instead.`
+          "Live route sync is unavailable right now. Built-in routes are being shown instead."
         );
         hasLoadedRoutesRef.current = true;
       } finally {
