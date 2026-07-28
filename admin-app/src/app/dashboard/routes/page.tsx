@@ -290,7 +290,7 @@ export default function RoutesPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard
           label="Total Routes"
           value={routes.length}
@@ -314,11 +314,11 @@ export default function RoutesPage() {
         />
       </div>
 
-      <div className="grid grid-cols-[320px_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         {/* Route List Panel */}
         <div className="rounded-xl border border-white/10 bg-[#111120] shadow-xl overflow-hidden flex flex-col">
           <div className="p-4 border-b border-white/10 space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-bold text-white">Route Library</span>
               <button
                 onClick={createNewRoute}
@@ -339,7 +339,7 @@ export default function RoutesPage() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[560px]">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 max-h-[320px] lg:max-h-[560px]">
             {isLoading ? (
               [1, 2, 3].map((n) => (
                 <div key={n} className="h-16 rounded-lg bg-white/5 animate-pulse" />
@@ -377,8 +377,8 @@ export default function RoutesPage() {
         </div>
 
         {/* Editor Panel */}
-        <div className="rounded-xl border border-white/10 bg-[#111120] shadow-xl p-6">
-          <div className="flex items-center justify-between mb-5">
+        <div className="rounded-xl border border-white/10 bg-[#111120] shadow-xl p-4 sm:p-6 min-w-0">
+          <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
                 {isCreating ? 'Create' : 'Edit'}
@@ -399,7 +399,7 @@ export default function RoutesPage() {
           </div>
 
           <form onSubmit={saveRoute} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="space-y-1.5 block">
                 <span className="text-[11px] font-semibold text-zinc-400">Route Name</span>
                 <input
@@ -485,8 +485,8 @@ export default function RoutesPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-3">
-                      <label className="space-y-1 block col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <label className="space-y-1 block sm:col-span-2 lg:col-span-2">
                         <span className="text-[10px] font-semibold text-zinc-400">Stop name</span>
                         <input
                           value={stop.name}
@@ -516,7 +516,7 @@ export default function RoutesPage() {
                           className="w-full px-2.5 py-1.5 rounded-md bg-[#0d0d1a] border border-white/10 text-white text-xs outline-none focus:border-indigo-500"
                         />
                       </label>
-                      <label className="space-y-1 block col-span-4">
+                      <label className="space-y-1 block sm:col-span-2 lg:col-span-4">
                         <span className="text-[10px] font-semibold text-zinc-400">Map URL (optional)</span>
                         <input
                           value={stop.mapUrl}
@@ -531,7 +531,7 @@ export default function RoutesPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-3 pt-2 flex-wrap">
               <button
                 type="submit"
                 disabled={isSaving}

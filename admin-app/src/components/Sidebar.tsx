@@ -13,13 +13,16 @@ import {
   LogOut,
   CarTaxiFront,
   Route,
+  X,
 } from 'lucide-react';
 
 interface SidebarProps {
   pendingKycCount?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ pendingKycCount = 0 }: SidebarProps) {
+export default function Sidebar({ pendingKycCount = 0, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAdminAuth();
 
@@ -75,7 +78,21 @@ export default function Sidebar({ pendingKycCount = 0 }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-60 bg-[#0d0d1a] border-r border-white/10 flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto">
+    <>
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`w-60 bg-[#0d0d1a] border-r border-white/10 flex flex-col shrink-0 h-screen overflow-y-auto fixed top-0 left-0 z-50 transition-transform duration-200 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 md:sticky md:z-auto`}
+      >
       {/* Brand Logo Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
@@ -85,6 +102,13 @@ export default function Sidebar({ pendingKycCount = 0 }: SidebarProps) {
         <span className="text-[10px] font-bold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
           Admin
         </span>
+        <button
+          onClick={onClose}
+          className="ml-auto p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 md:hidden"
+          aria-label="Close menu"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Navigation Sections */}
@@ -146,6 +170,7 @@ export default function Sidebar({ pendingKycCount = 0 }: SidebarProps) {
           <span>Sign out</span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

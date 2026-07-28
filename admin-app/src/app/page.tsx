@@ -51,7 +51,7 @@ export default function LoginPage() {
       {/* Background glow */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-[#111120] border border-white/10 rounded-2xl p-8 shadow-2xl relative z-10">
+      <div className="w-full max-w-md bg-[#111120] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl relative z-10">
         {/* Brand logo */}
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">

@@ -109,19 +109,19 @@ export default function KycDrawer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drawer Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-[#0d0d1a] sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 font-extrabold flex items-center justify-center text-sm border border-indigo-500/20">
+        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between gap-3 bg-[#0d0d1a] sticky top-0 z-10">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 font-extrabold flex items-center justify-center text-sm border border-indigo-500/20 shrink-0">
               {driverName.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <div className="font-extrabold text-sm text-white">{driverName}</div>
-              <div className="text-xs text-zinc-400">
+            <div className="min-w-0">
+              <div className="font-extrabold text-sm text-white truncate">{driverName}</div>
+              <div className="text-xs text-zinc-400 truncate">
                 {driverPhone} {kycRow.drivers?.ride_type ? `• ${kycRow.drivers.ride_type}` : ''}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <StatusBadge status={kycRow.status} />
             <button
               onClick={onClose}
@@ -133,7 +133,7 @@ export default function KycDrawer({
         </div>
 
         {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           {kycRow.rejection_reason && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex gap-2.5">
               <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
@@ -149,7 +149,7 @@ export default function KycDrawer({
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 pb-1 border-b border-white/10">
               Personal Details
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {renderField('Full Name', kycRow.full_name)}
               {renderField('Date of Birth', kycRow.dob)}
               {renderField('Gender', kycRow.gender)}
@@ -164,13 +164,13 @@ export default function KycDrawer({
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 pb-1 border-b border-white/10">
               Identity Documents
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
               {renderField('Aadhaar Number', kycRow.aadhaar_number)}
               {renderField('PAN Number', kycRow.pan_number)}
               {renderField('License Number', kycRow.license_number)}
               {renderField('License Expiry', kycRow.license_expiry)}
             </div>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {DOC_FIELDS.slice(0, 6).map((field) => {
                 const url = signedUrls[field.key];
                 return (
@@ -209,7 +209,7 @@ export default function KycDrawer({
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 pb-1 border-b border-white/10">
               Vehicle & Compliance
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
               {renderField('Vehicle Type', kycRow.vehicle_type)}
               {renderField('Vehicle Number', kycRow.vehicle_number)}
               {renderField('Vehicle Model', kycRow.vehicle_model)}
@@ -220,7 +220,7 @@ export default function KycDrawer({
               {renderField('PUC Number', kycRow.puc_number)}
               {renderField('PUC Expiry', kycRow.puc_expiry)}
             </div>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {DOC_FIELDS.slice(6).map((field) => {
                 const url = signedUrls[field.key];
                 return (
@@ -259,7 +259,7 @@ export default function KycDrawer({
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 pb-1 border-b border-white/10">
               Bank Details
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {renderField('Account Holder', kycRow.account_holder_name)}
               {renderField('Bank Name', kycRow.bank_name)}
               {renderField('Account Number', kycRow.account_number)}

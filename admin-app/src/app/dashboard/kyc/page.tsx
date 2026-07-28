@@ -111,7 +111,7 @@ export default function KycPage() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           label="Total Submissions"
           value={totalCount}
@@ -153,7 +153,7 @@ export default function KycPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -165,14 +165,14 @@ export default function KycPage() {
               <option value="rejected">Rejected</option>
             </select>
 
-            <div className="relative">
+            <div className="relative flex-1 min-w-[160px] sm:flex-initial">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search name or phone..."
-                className="pl-8 pr-3 py-1.5 rounded-lg bg-[#181830] border border-white/10 text-white text-xs font-medium outline-none focus:border-indigo-500 w-52 focus:w-64 transition-all"
+                className="pl-8 pr-3 py-1.5 rounded-lg bg-[#181830] border border-white/10 text-white text-xs font-medium outline-none focus:border-indigo-500 w-full sm:w-52 sm:focus:w-64 transition-all"
               />
             </div>
           </div>
